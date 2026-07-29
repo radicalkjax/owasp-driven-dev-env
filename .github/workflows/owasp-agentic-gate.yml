@@ -4,6 +4,12 @@ on:
   pull_request:
     branches: [main]
 
+# Least-privilege default: every job here only needs to read the repo
+# contents to diff/scan them. Nothing writes back to the PR or the repo,
+# so the default token gets no more than read access.
+permissions:
+  contents: read
+
 env:
   BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
@@ -12,7 +18,7 @@ jobs:
     # ASI03 — Identity & Privilege Abuse: no static credentials committed.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
       - run: bash .github/workflows/policies/check-secrets-scan.sh
@@ -22,7 +28,7 @@ jobs:
     # + firewall) must exist and can't be silently weakened in a PR.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - run: bash .github/workflows/policies/check-sandbox-integrity.sh
 
   aibom-updated:
@@ -30,7 +36,7 @@ jobs:
     # be declared in the AIBOM in the same PR that introduces them.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
       - run: bash .github/workflows/policies/check-aibom-updated.sh
@@ -40,7 +46,7 @@ jobs:
     # via flake.lock, not resolved fresh on every machine.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
       - run: bash .github/workflows/policies/check-flake-lock.sh
@@ -50,7 +56,7 @@ jobs:
     # carry cost-center, client-tenant, and environment tags.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
       - run: bash .github/workflows/policies/check-cost-tags.sh
@@ -61,7 +67,7 @@ jobs:
     # default-deny egress. Block them everywhere else.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
       - run: bash .github/workflows/policies/check-dangerous-flags.sh
@@ -70,5 +76,5 @@ jobs:
     # ASI10 — Rogue Agents: every agent manifest needs an owner + expiry.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - run: bash .github/workflows/policies/check-agent-lifecycle.sh

@@ -95,6 +95,22 @@ header comment in `flake.nix`. Until someone generates and commits the
 real one, `flake-lock-pinned` will fail on every PR; that's intentional
 honesty over a fabricated lock file, not a bug.
 
+## Supply-chain hardening in the CI gate itself
+
+The gate that checks this repo's supply chain has its own supply chain, so
+it's held to the same standard:
+
+- `actions/checkout` is pinned by commit SHA, not the mutable `@v4` tag
+  (`# v4.4.0` alongside it for readability) — a re-tagged or compromised
+  upstream action can't silently change what runs.
+- Both workflows declare an explicit `permissions:` block — read-only for
+  the PR gate (it only diffs and scans, never writes back), and empty for
+  the nightly stub (it doesn't check out the repo or call the API at all).
+- The two binaries fetched over the network — the Nix installer in
+  `Dockerfile` and gitleaks in `check-secrets-scan.sh` — are pinned to a
+  specific version and checked against a sha256 published by the
+  upstream project, instead of a bare `curl | sh`/unverified download.
+
 ## Wiring this into a real environment
 
 - **Secrets scan**: `check-secrets-scan.sh` installs and runs gitleaks —

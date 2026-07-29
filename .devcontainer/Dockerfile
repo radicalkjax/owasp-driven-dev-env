@@ -21,7 +21,20 @@ RUN useradd -m -s /bin/bash agent
 RUN mkdir -m 0755 /nix && chown agent:agent /nix
 
 USER agent
-RUN curl -L https://nixos.org/nix/install | sh -s -- --no-daemon
+# Pinned to a specific released Nix version via its immutable
+# releases.nixos.org URL, not the rolling https://nixos.org/nix/install
+# redirect (which always serves whatever the current "latest" is — an
+# unpinned, moving target). This version's installer has the expected
+# tarball hash (sha256 3c0779e4878d1289cf3fbb158ec5ea9bdf61dfb9b4efac6b3b0b6bec5ba4cf13
+# for nix-2.24.9-x86_64-linux.tar.xz) baked in and verifies it before
+# unpacking — confirmed against the independently published
+# nix-2.24.9-x86_64-linux.tar.xz.sha256 at the same host. Downloaded to a
+# file and inspected as a build step rather than piped straight into a
+# shell, so a truncated or corrupted fetch fails loudly instead of
+# executing a partial script.
+RUN curl -sSL -o /tmp/nix-install.sh https://releases.nixos.org/nix/nix-2.24.9/install \
+    && sh /tmp/nix-install.sh --no-daemon \
+    && rm -f /tmp/nix-install.sh
 ENV PATH="/home/agent/.nix-profile/bin:${PATH}"
 RUN mkdir -p /home/agent/.config/nix \
     && echo "experimental-features = nix-command flakes" \

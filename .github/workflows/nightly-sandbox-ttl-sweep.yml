@@ -10,6 +10,11 @@ on:
     - cron: "0 3 * * *"
   workflow_dispatch: {}
 
+# This job doesn't check out the repo or call the GitHub API today — it
+# only prints a description of what a real sweep would do. No token
+# access is needed for that.
+permissions: {}
+
 jobs:
   sweep:
     runs-on: ubuntu-latest
