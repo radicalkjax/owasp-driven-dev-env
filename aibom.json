@@ -1,0 +1,21 @@
+{
+  "aibom_version": "0.1",
+  "note": "This is a hand-seeded starter AIBOM for the example agent only. In production this file should be generated and kept up to date by real SCA / AI-inventory tooling, not hand-edited.",
+  "components": [
+    {
+      "type": "agent",
+      "name": "example-dev-agent",
+      "owner": "team-devex@company.com",
+      "model_provider": "anthropic",
+      "model": "claude-sonnet-4-6",
+      "hosting_location": "direct-api",
+      "auth_method": "workload-identity-federation",
+      "tools": [
+        "bash",
+        "git"
+      ],
+      "mcp_servers": [],
+      "expires": "2026-10-28"
+    }
+  ]
+}
