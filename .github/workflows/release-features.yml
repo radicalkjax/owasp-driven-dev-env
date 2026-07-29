@@ -41,6 +41,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create PR for Documentation
+        # Non-fatal: publishing the package (the step above) is what
+        # actually matters. This step needs "Allow GitHub Actions to
+        # create and approve pull requests" enabled under Settings >
+        # Actions > General, which is off by default on new repos — so
+        # gh pr create can fail here even though nothing else is wrong.
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -58,5 +64,6 @@ jobs:
 
           if [ "${NO_UPDATES:-}" != "true" ]; then
             git push origin "$branch"
-            gh pr create --title "Automated documentation update" --body "Regenerated Feature option tables from devcontainer-feature.json after the latest publish."
+            gh pr create --title "Automated documentation update" --body "Regenerated Feature option tables from devcontainer-feature.json after the latest publish." \
+              || echo "::warning::Could not open the docs PR (GitHub Actions PR creation is likely disabled in repo settings). The package itself still published successfully."
           fi
