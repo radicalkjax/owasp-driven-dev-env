@@ -1,16 +1,7 @@
-# Pinned dev toolchain for the agentic sandbox.
-#
-# HONESTY NOTE: this repo does NOT ship a flake.lock. Lock files pin exact
-# content hashes for every input, and fabricating one would mean
-# fabricating hashes that don't correspond to anything real — worse than
-# no lock file at all. Generate the real one yourself, once, with network
-# access:
-#
-#     nix flake lock
-#
-# then commit flake.lock alongside this file. The CI check
-# (.github/workflows/policies/check-flake-lock.sh) enforces that it exists
-# and stays in sync with flake.nix from then on.
+# Pinned dev toolchain for the agentic sandbox. flake.lock (committed
+# alongside this file) is real, verified output of an actual
+# `nix flake lock` run — not hand-written. Regenerate it the same way
+# after changing an input: `nix flake lock`, then commit the result.
 
 {
   description = "Agentic dev sandbox — pinned toolchain";
@@ -20,8 +11,16 @@
     # a smaller, more reviewed diff between updates than unstable's rolling
     # HEAD. flake.lock is still what makes any given checkout reproducible;
     # this only controls what `nix flake update` moves *to* next.
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
-    flake-utils.url = "github:numtide/flake-utils";
+    #
+    # git+https (not the shorter "github:owner/repo" shorthand) on purpose:
+    # the shorthand resolves the current commit via the GitHub API, which
+    # some restricted/proxied environments (including the one that
+    # generated this repo's flake.lock) block for arbitrary repos. A plain
+    # git fetch works wherever git+https access does. "shallow=1" keeps
+    # the fetch to one commit instead of full history — nixpkgs' full
+    # history alone is gigabytes.
+    nixpkgs.url = "git+https://github.com/NixOS/nixpkgs?ref=nixos-26.05&shallow=1";
+    flake-utils.url = "git+https://github.com/numtide/flake-utils?shallow=1";
   };
 
   outputs = { self, nixpkgs, flake-utils }:
@@ -31,10 +30,10 @@
       in
       {
         devShells.default = pkgs.mkShell {
-          # Every package here is content-hash-pinned via flake.lock once
-          # it's generated. This is the ASI04 (Agentic Supply Chain) story:
-          # flake.lock gives verifiable, exact versions for the whole
-          # toolchain, not "whatever the package index had today."
+          # Every package here is content-hash-pinned via flake.lock. This
+          # is the ASI04 (Agentic Supply Chain) story: flake.lock gives
+          # verifiable, exact versions for the whole toolchain, not
+          # "whatever the package index had today."
           buildInputs = with pkgs; [
             git
             ripgrep

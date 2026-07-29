@@ -5,14 +5,24 @@
   },
   // OWASP Docker Security Cheat Sheet: drop every Linux capability Docker
   // grants by default (CHOWN, SETUID, MKNOD, and others this container
-  // never needs), then add back only NET_ADMIN/NET_RAW so init-firewall.sh
-  // can apply the default-deny iptables/ipset rules below. Nothing else
-  // in this container needs elevated privileges — see the scoped sudoers
-  // rule in Dockerfile.
-  "runArgs": ["--cap-drop=ALL", "--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+  // never needs). The agentic-sandbox-firewall Feature below adds back
+  // only NET_ADMIN/NET_RAW via its own "capAdd" — we don't need to name
+  // them here too.
+  "runArgs": ["--cap-drop=ALL"],
   "remoteUser": "agent",
   "containerUser": "agent",
-  "postCreateCommand": "sudo bash .devcontainer/init-firewall.sh",
+  // Local reference to this repo's own published Feature (dogfooding —
+  // one copy of the firewall logic, not a second one maintained here).
+  // Relative paths in "features" resolve to the folder containing THIS
+  // file, i.e. .devcontainer/, hence "../src/...". The Feature's
+  // entrypoint re-applies the firewall on every container start, not
+  // just first creation, so there's no postCreateCommand/postStartCommand
+  // needed here for it.
+  "features": {
+    "../src/agentic-sandbox-firewall": {
+      "remoteUser": "agent"
+    }
+  },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
   "workspaceFolder": "/workspace",
   // Deliberately no mounts of $HOME, ~/.ssh, ~/.aws, or any other

@@ -50,25 +50,13 @@ RUN mkdir -p /home/agent/.config/nix \
 # The underlying /nix/store/<hash>-iptables-x.y.z paths are content-hashed
 # and shift on every `nix flake update` / channel bump.
 # ~/.nix-profile/bin/<name> is a symlink that stays at the same path
-# across those updates — that's the path the sudoers rule below (and
-# init-firewall.sh) reference, on purpose, never the raw store path.
+# across those updates. The agentic-sandbox-firewall Feature (declared in
+# devcontainer.json, source at ../src/agentic-sandbox-firewall) detects
+# these already being on PATH and reuses them rather than installing a
+# second copy via apt — it also owns the sudoers rule and the actual
+# firewall script from here on, so this Dockerfile no longer does either.
 RUN nix profile install nixpkgs#iptables nixpkgs#ipset nixpkgs#dnsutils
 
-USER root
-
-# Scoped sudo: this user may run exactly iptables and ipset as root, and
-# nothing else. This is what lets postCreateCommand apply the firewall
-# without granting the agent general root access. Written as an explicit
-# sudoers rule (not "agent ALL=(ALL) NOPASSWD: ALL") on purpose.
-RUN echo "agent ALL=(root) NOPASSWD: /home/agent/.nix-profile/bin/iptables, /home/agent/.nix-profile/bin/ipset" \
-      > /etc/sudoers.d/agent-firewall \
-    && chmod 0440 /etc/sudoers.d/agent-firewall \
-    && visudo -c
-
-COPY init-firewall.sh /usr/local/bin/init-firewall.sh
-RUN chmod +x /usr/local/bin/init-firewall.sh
-
-USER agent
 WORKDIR /workspace
 
 # Copy the flake so the devShell can be pre-built at image-build time
