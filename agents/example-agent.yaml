@@ -9,7 +9,7 @@
 name: example-dev-agent
 owner: team-devex@company.com
 purpose: "Automated test generation for the billing service"
-model: claude-sonnet-4-6
+model: claude-sonnet-5
 scopes:
   - repo:read
   - repo:pr:write
@@ -18,5 +18,5 @@ tools:
   - git
 credentials: workload-identity-federation   # never a static API key, see README.md
 sandbox: required
-created: 2026-07-28
-expires: 2026-10-28
+created: 2026-07-29
+expires: 2026-10-29

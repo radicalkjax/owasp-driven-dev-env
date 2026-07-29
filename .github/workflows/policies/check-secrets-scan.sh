@@ -6,12 +6,12 @@ set -euo pipefail
 # the working tree, so a secret added and later "removed" in a follow-up
 # commit is still caught.
 
-GITLEAKS_VERSION="8.18.4"
+GITLEAKS_VERSION="8.30.1"
 GITLEAKS_ASSET="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
 # Published in gitleaks' own release checksums file (gitleaks_<version>_checksums.txt)
 # for this exact asset. Update this alongside GITLEAKS_VERSION — do not drop
 # the check to make a version bump easier.
-GITLEAKS_SHA256="ba6dbb656933921c775ee5a2d1c13a91046e7952e9d919f9bac4cec61d628e7d"
+GITLEAKS_SHA256="551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
 
 if ! command -v gitleaks >/dev/null 2>&1; then
   echo "Installing gitleaks v${GITLEAKS_VERSION}..."

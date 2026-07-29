@@ -16,7 +16,11 @@
   description = "Agentic dev sandbox — pinned toolchain";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # Tracks the current stable NixOS release channel, not nixos-unstable —
+    # a smaller, more reviewed diff between updates than unstable's rolling
+    # HEAD. flake.lock is still what makes any given checkout reproducible;
+    # this only controls what `nix flake update` moves *to* next.
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     flake-utils.url = "github:numtide/flake-utils";
   };
 

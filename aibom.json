@@ -7,7 +7,7 @@
       "name": "example-dev-agent",
       "owner": "team-devex@company.com",
       "model_provider": "anthropic",
-      "model": "claude-sonnet-4-6",
+      "model": "claude-sonnet-5",
       "hosting_location": "direct-api",
       "auth_method": "workload-identity-federation",
       "tools": [
@@ -15,7 +15,7 @@
         "git"
       ],
       "mcp_servers": [],
-      "expires": "2026-10-28"
+      "expires": "2026-10-29"
     }
   ],
   "toolchain_provenance": "flake.lock (Nix) - hash-pinned, see flake.nix header for how it's generated"

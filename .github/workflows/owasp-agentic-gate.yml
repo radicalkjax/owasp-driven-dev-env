@@ -18,7 +18,7 @@ jobs:
     # ASI03 — Identity & Privilege Abuse: no static credentials committed.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - run: bash .github/workflows/policies/check-secrets-scan.sh
@@ -28,7 +28,7 @@ jobs:
     # + firewall) must exist and can't be silently weakened in a PR.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: bash .github/workflows/policies/check-sandbox-integrity.sh
 
   aibom-updated:
@@ -36,7 +36,7 @@ jobs:
     # be declared in the AIBOM in the same PR that introduces them.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - run: bash .github/workflows/policies/check-aibom-updated.sh
@@ -46,7 +46,7 @@ jobs:
     # via flake.lock, not resolved fresh on every machine.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - run: bash .github/workflows/policies/check-flake-lock.sh
@@ -56,7 +56,7 @@ jobs:
     # carry cost-center, client-tenant, and environment tags.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - run: bash .github/workflows/policies/check-cost-tags.sh
@@ -67,7 +67,7 @@ jobs:
     # default-deny egress. Block them everywhere else.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - run: bash .github/workflows/policies/check-dangerous-flags.sh
@@ -76,5 +76,5 @@ jobs:
     # ASI10 — Rogue Agents: every agent manifest needs an owner + expiry.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: bash .github/workflows/policies/check-agent-lifecycle.sh

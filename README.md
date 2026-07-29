@@ -18,9 +18,10 @@ all of the above before merge.
    the resulting `flake.lock`.
 2. Open this repository in a Dev Containers-compatible editor (VS Code:
    "Reopen in Container"). This builds `.devcontainer/Dockerfile` — Debian
-   base + single-user Nix install — and starts the container with only
-   `NET_ADMIN`/`NET_RAW` added, no other elevated privileges, and no host
-   directories mounted beyond the project workspace itself.
+   trixie base + single-user Nix install — and starts the container with
+   every Linux capability dropped except `NET_ADMIN`/`NET_RAW`, no other
+   elevated privileges, and no host directories mounted beyond the
+   project workspace itself.
 3. On container creation, `postCreateCommand` runs
    `sudo bash .devcontainer/init-firewall.sh`, which locks egress down to
    loopback, established connections, DNS to a configured resolver, and a
@@ -45,12 +46,14 @@ flake.nix                 — pinned dev toolchain (Nix); see its header for
 .envrc                     — optional direnv auto-load of the flake devShell
 
 .devcontainer/
-  devcontainer.json    — sandbox definition: NET_ADMIN/NET_RAW only, no
-                          credential-directory bind mounts, runs the
-                          firewall script via postCreateCommand
-  Dockerfile            — Debian base + single-user Nix install, non-root
-                          `agent` user, sudo scoped to exactly the Nix-
-                          profile iptables + ipset binaries
+  devcontainer.json    — sandbox definition: all capabilities dropped
+                          except NET_ADMIN/NET_RAW, no credential-
+                          directory bind mounts, runs the firewall script
+                          via postCreateCommand
+  Dockerfile            — Debian trixie base pinned by tag+digest,
+                          single-user Nix install, non-root `agent` user,
+                          sudo scoped to exactly the Nix-profile iptables
+                          + ipset binaries
   init-firewall.sh      — default-deny egress firewall (ASI05)
 
 agents/
@@ -70,6 +73,11 @@ aibom.json              — seed AI Bill of Materials for the example
 policy/OWASP-ASI-MAPPING.md      — honest coverage table for all ten ASI
                                     risks: what's covered, how, and what
                                     isn't
+policy/OWASP-DOCKER-MAPPING.md   — same honesty, for the OWASP Docker
+                                    Top 10 (image, runtime, and supply-
+                                    chain hardening vs. host/daemon/
+                                    registry concerns out of this repo's
+                                    reach)
 
 README.md                — this file
 ```
@@ -100,8 +108,8 @@ honesty over a fabricated lock file, not a bug.
 The gate that checks this repo's supply chain has its own supply chain, so
 it's held to the same standard:
 
-- `actions/checkout` is pinned by commit SHA, not the mutable `@v4` tag
-  (`# v4.4.0` alongside it for readability) — a re-tagged or compromised
+- `actions/checkout` is pinned by commit SHA, not the mutable `@v7` tag
+  (`# v7.0.1` alongside it for readability) — a re-tagged or compromised
   upstream action can't silently change what runs.
 - Both workflows declare an explicit `permissions:` block — read-only for
   the PR gate (it only diffs and scans, never writes back), and empty for
@@ -110,6 +118,16 @@ it's held to the same standard:
   `Dockerfile` and gitleaks in `check-secrets-scan.sh` — are pinned to a
   specific version and checked against a sha256 published by the
   upstream project, instead of a bare `curl | sh`/unverified download.
+- The devcontainer's base image is pinned by tag *and* content digest
+  (see `Dockerfile`), and `--cap-drop=ALL` runs before the two
+  `--cap-add` flags in `devcontainer.json` — the container gets only the
+  two capabilities it actually uses, not Docker's broader default set.
+
+All version pins above (base image, Nix, gitleaks, `actions/checkout`)
+were current as of July 2026. They're concrete values, not `latest`, so
+a future bump shows up as a reviewable line in a diff — see
+`policy/OWASP-DOCKER-MAPPING.md` (D07) for the honest caveat that nothing
+in this repo automates *making* that bump yet.
 
 ## Wiring this into a real environment
 
@@ -134,12 +152,22 @@ it's held to the same standard:
 ## What this does NOT cover
 
 This repo is a pre-merge CI gate plus a sandboxed container — it cannot
-observe an agent's live behavior. See
-[`policy/OWASP-ASI-MAPPING.md`](policy/OWASP-ASI-MAPPING.md) for the full,
-honest breakdown, but in short: goal hijacking (ASI01), memory/context
-poisoning (ASI06), insecure inter-agent communication (ASI07), and
-cascading failures (ASI08) all require runtime behavioral monitoring that
-no static file check or PR gate can provide. `nightly-sandbox-ttl-sweep.yml`
-is also explicitly a stub — it cannot reach sandboxes running on a
-developer's local Docker daemon; that gap needs either a local watchdog
-process or moving sandboxes off laptops entirely.
+observe an agent's live behavior, and it isn't a substitute for host- or
+registry-level Docker hardening. Two honest breakdowns cover this in
+full:
+
+- [`policy/OWASP-ASI-MAPPING.md`](policy/OWASP-ASI-MAPPING.md) — goal
+  hijacking (ASI01), memory/context poisoning (ASI06), insecure
+  inter-agent communication (ASI07), and cascading failures (ASI08) all
+  require runtime behavioral monitoring that no static file check or PR
+  gate can provide.
+- [`policy/OWASP-DOCKER-MAPPING.md`](policy/OWASP-DOCKER-MAPPING.md) —
+  securing the Docker host and daemon, registry access control/image
+  signing, and centralized container log collection are all
+  infrastructure decisions that belong to wherever this container
+  actually runs, not to a devcontainer definition in a git repo.
+
+`nightly-sandbox-ttl-sweep.yml` is also explicitly a stub — it cannot
+reach sandboxes running on a developer's local Docker daemon; that gap
+needs either a local watchdog process or moving sandboxes off laptops
+entirely.

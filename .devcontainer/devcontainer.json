@@ -3,11 +3,13 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
-  // NET_ADMIN/NET_RAW are granted ONLY so init-firewall.sh can apply the
-  // default-deny iptables/ipset rules below. Nothing else in this
-  // container needs elevated privileges — see the scoped sudoers rule
-  // in Dockerfile.
-  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+  // OWASP Docker Security Cheat Sheet: drop every Linux capability Docker
+  // grants by default (CHOWN, SETUID, MKNOD, and others this container
+  // never needs), then add back only NET_ADMIN/NET_RAW so init-firewall.sh
+  // can apply the default-deny iptables/ipset rules below. Nothing else
+  // in this container needs elevated privileges — see the scoped sudoers
+  // rule in Dockerfile.
+  "runArgs": ["--cap-drop=ALL", "--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
   "remoteUser": "agent",
   "containerUser": "agent",
   "postCreateCommand": "sudo bash .devcontainer/init-firewall.sh",

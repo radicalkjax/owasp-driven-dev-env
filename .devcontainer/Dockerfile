@@ -2,7 +2,13 @@
 # base image. Nix-only images commonly lack packages an editor server
 # (VS Code Remote, etc.) needs to attach to the container — "normal
 # devcontainer base, install Nix inside it" is the pattern that avoids that.
-FROM mcr.microsoft.com/devcontainers/base:bookworm
+#
+# Pinned to both a specific image version AND its content digest, on
+# Debian trixie (current stable as of mid-2026 — bookworm is oldstable).
+# The tag alone (2.1.11-trixie) is for a human reading this file; the
+# @sha256 digest is what Docker actually resolves, so a re-tag upstream
+# can't silently swap out what gets built.
+FROM mcr.microsoft.com/devcontainers/base:2.1.11-trixie@sha256:1a00517e89d3075f8c9dc8d9911404de0ff8991a4d71c62068573e9b016a89da
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl xz-utils ca-certificates sudo direnv \
@@ -25,14 +31,14 @@ USER agent
 # releases.nixos.org URL, not the rolling https://nixos.org/nix/install
 # redirect (which always serves whatever the current "latest" is — an
 # unpinned, moving target). This version's installer has the expected
-# tarball hash (sha256 3c0779e4878d1289cf3fbb158ec5ea9bdf61dfb9b4efac6b3b0b6bec5ba4cf13
-# for nix-2.24.9-x86_64-linux.tar.xz) baked in and verifies it before
+# tarball hash (sha256 c3fe29778acaa93b5095ee66e36f11ec7c6a284c40970a24cc83ac4f04809db3
+# for nix-2.35.1-x86_64-linux.tar.xz) baked in and verifies it before
 # unpacking — confirmed against the independently published
-# nix-2.24.9-x86_64-linux.tar.xz.sha256 at the same host. Downloaded to a
+# nix-2.35.1-x86_64-linux.tar.xz.sha256 at the same host. Downloaded to a
 # file and inspected as a build step rather than piped straight into a
 # shell, so a truncated or corrupted fetch fails loudly instead of
 # executing a partial script.
-RUN curl -sSL -o /tmp/nix-install.sh https://releases.nixos.org/nix/nix-2.24.9/install \
+RUN curl -sSL -o /tmp/nix-install.sh https://releases.nixos.org/nix/nix-2.35.1/install \
     && sh /tmp/nix-install.sh --no-daemon \
     && rm -f /tmp/nix-install.sh
 ENV PATH="/home/agent/.nix-profile/bin:${PATH}"
