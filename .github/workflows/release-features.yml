@@ -17,7 +17,12 @@ on:
 
 jobs:
   deploy:
-    if: ${{ github.ref == 'refs/heads/main' }}
+    # For a "release" event, github.ref is the tag ref (refs/tags/vX.Y.Z),
+    # never refs/heads/main — the original template-starter condition this
+    # was modeled on only accounted for workflow_dispatch. Publishing a
+    # release is already a deliberate action, so allow it unconditionally;
+    # workflow_dispatch still requires being run against main.
+    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
       packages: write
