@@ -1,0 +1,27 @@
+{
+  "id": "agentic-sandbox-firewall",
+  "version": "1.0.0",
+  "name": "Agentic Sandbox Firewall",
+  "description": "Default-deny egress firewall for AI-agent devcontainers (OWASP ASI05: Unexpected Code Execution). Blocks all outbound traffic except loopback, established connections, DNS to a configured resolver, and an explicit domain allowlist. Re-applies on every container start via the container entrypoint, not just first creation.",
+  "documentationURL": "https://github.com/radicalkjax/owasp-driven-dev-env/tree/main/src/agentic-sandbox-firewall",
+  "licenseURL": "https://github.com/radicalkjax/owasp-driven-dev-env/blob/main/LICENSE",
+  "options": {
+    "remoteUser": {
+      "type": "string",
+      "default": "vscode",
+      "description": "Non-root username this devcontainer runs as. A sudoers rule scoped to exactly this user — and exactly iptables/ipset, nothing else — is created for it."
+    },
+    "allowedDomains": {
+      "type": "string",
+      "default": "api.anthropic.com,github.com,codeload.github.com,registry.npmjs.org,pypi.org,files.pythonhosted.org",
+      "description": "Comma-separated allowlist of domains the container may reach. Resolved to IPs every time the container starts."
+    },
+    "dnsResolver": {
+      "type": "string",
+      "default": "1.1.1.1",
+      "description": "DNS resolver the container is allowed to query. Replace with an internal/corporate resolver if your policy requires one."
+    }
+  },
+  "capAdd": ["NET_ADMIN", "NET_RAW"],
+  "entrypoint": "/usr/local/share/agentic-sandbox-firewall/entrypoint.sh"
+}
