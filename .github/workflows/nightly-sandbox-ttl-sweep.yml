@@ -1,0 +1,40 @@
+name: Nightly Sandbox TTL Sweep
+
+# STUB — this workflow does not actually clean anything up yet. It
+# documents the intended pattern and, just as importantly, documents what
+# it structurally cannot reach. Wire the real implementation to your
+# actual sandbox host before relying on this.
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch: {}
+
+# This job doesn't check out the repo or call the GitHub API today — it
+# only prints a description of what a real sweep would do. No token
+# access is needed for that.
+permissions: {}
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sweep cloud-hosted dev sandboxes past their TTL (stub)
+        run: |
+          echo "This is a STUB. Nothing is destroyed by this job today."
+          echo ""
+          echo "Pattern for a real implementation (Codespaces, devpod, ECS, ACI, etc.):"
+          echo "  1. List running dev sandboxes tagged with a 'created' timestamp."
+          echo "  2. Filter to those older than your TTL (e.g. 8h)."
+          echo "  3. Stop/delete them via the provider's CLI or API."
+          echo ""
+          echo "HONEST GAP: this job runs on GitHub-hosted runners and cannot see"
+          echo "or kill containers running on a developer's local Docker daemon."
+          echo "Local devcontainer usage needs one of:"
+          echo "  (a) moving dev sandboxes off laptops entirely (Codespaces, a"
+          echo "      cloud devpod, or a cloud VM) so a job like this CAN reach them, or"
+          echo "  (b) a local watchdog process (a systemd timer or launchd job) that"
+          echo "      runs 'docker rm -f' (or your devcontainer CLI's destroy command)"
+          echo "      after N idle hours."
+          echo "This job alone does not solve local cleanup — pick (a) or (b) if"
+          echo "TTL enforcement on local sandboxes is a hard requirement."

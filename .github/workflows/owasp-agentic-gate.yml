@@ -1,0 +1,80 @@
+name: OWASP Agentic Top 10 Gate
+
+on:
+  pull_request:
+    branches: [main]
+
+# Least-privilege default: every job here only needs to read the repo
+# contents to diff/scan them. Nothing writes back to the PR or the repo,
+# so the default token gets no more than read access.
+permissions:
+  contents: read
+
+env:
+  BASE_SHA: ${{ github.event.pull_request.base.sha }}
+
+jobs:
+  secrets-scan:
+    # ASI03 — Identity & Privilege Abuse: no static credentials committed.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - run: bash .github/workflows/policies/check-secrets-scan.sh
+
+  sandbox-integrity:
+    # ASI05 — Unexpected Code Execution: the sandbox boundary (devcontainer
+    # + firewall) must exist and can't be silently weakened in a PR.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: bash .github/workflows/policies/check-sandbox-integrity.sh
+
+  aibom-updated:
+    # ASI04 — Agentic Supply Chain: new deps/tools/MCP servers/agents must
+    # be declared in the AIBOM in the same PR that introduces them.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - run: bash .github/workflows/policies/check-aibom-updated.sh
+
+  flake-lock-pinned:
+    # ASI04 — Agentic Supply Chain: the dev toolchain must be hash-pinned
+    # via flake.lock, not resolved fresh on every machine.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - run: bash .github/workflows/policies/check-flake-lock.sh
+
+  cost-tags:
+    # Accountability gate for spend: changed IaC under infra/deploy must
+    # carry cost-center, client-tenant, and environment tags.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - run: bash .github/workflows/policies/check-cost-tags.sh
+
+  dangerous-flags:
+    # ASI02 / ASI09 — Tool Misuse & Human-Agent Trust Exploitation:
+    # permission-bypass flags are only safe inside a sandbox with
+    # default-deny egress. Block them everywhere else.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - run: bash .github/workflows/policies/check-dangerous-flags.sh
+
+  agent-lifecycle:
+    # ASI10 — Rogue Agents: every agent manifest needs an owner + expiry.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: bash .github/workflows/policies/check-agent-lifecycle.sh

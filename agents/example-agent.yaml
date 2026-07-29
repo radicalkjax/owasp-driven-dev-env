@@ -1,0 +1,22 @@
+# Every agent manifest MUST include, at minimum, an `owner` and an
+# `expires` field (enforced by CI — see
+# .github/workflows/policies/check-agent-lifecycle.sh). This directly
+# addresses OWASP ASI10 (Rogue Agents): an agent definition with no named
+# owner and no expiry date is exactly how orphaned, unaudited agents
+# accumulate in a codebase. If nobody owns it and it never expires,
+# nobody is accountable for reviewing or retiring it.
+
+name: example-dev-agent
+owner: team-devex@company.com
+purpose: "Automated test generation for the billing service"
+model: claude-sonnet-5
+scopes:
+  - repo:read
+  - repo:pr:write
+tools:
+  - bash
+  - git
+credentials: workload-identity-federation   # never a static API key, see README.md
+sandbox: required
+created: 2026-07-29
+expires: 2026-10-29
