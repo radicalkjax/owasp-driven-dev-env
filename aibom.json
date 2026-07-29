@@ -17,5 +17,6 @@
       "mcp_servers": [],
       "expires": "2026-10-28"
     }
-  ]
+  ],
+  "toolchain_provenance": "flake.lock (Nix) - hash-pinned, see flake.nix header for how it's generated"
 }

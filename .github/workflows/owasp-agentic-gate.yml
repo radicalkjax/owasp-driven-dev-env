@@ -35,6 +35,16 @@ jobs:
           fetch-depth: 0
       - run: bash .github/workflows/policies/check-aibom-updated.sh
 
+  flake-lock-pinned:
+    # ASI04 — Agentic Supply Chain: the dev toolchain must be hash-pinned
+    # via flake.lock, not resolved fresh on every machine.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: bash .github/workflows/policies/check-flake-lock.sh
+
   cost-tags:
     # Accountability gate for spend: changed IaC under infra/deploy must
     # carry cost-center, client-tenant, and environment tags.

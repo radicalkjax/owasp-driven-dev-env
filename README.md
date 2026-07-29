@@ -3,39 +3,54 @@
 A sandboxed development environment for teams using AI coding agents,
 built around the controls described in the OWASP Top 10 for Agentic
 Applications (2026): a firewalled devcontainer with no static credentials,
-an agent manifest format that can't go ownerless, an AI Bill of Materials,
-and a pull-request gate that enforces all of the above before merge.
+a pinned (Nix) dev toolchain, an agent manifest format that can't go
+ownerless, an AI Bill of Materials, and a pull-request gate that enforces
+all of the above before merge.
 
 ## Quick start
 
-1. Open this repository in a Dev Containers-compatible editor (VS Code:
-   "Reopen in Container"). This builds `.devcontainer/Dockerfile` and
-   starts the container with only `NET_ADMIN`/`NET_RAW` added — no other
-   elevated privileges, and no host directories mounted beyond the
-   project workspace itself.
-2. On container creation, `postCreateCommand` runs
+1. **Generate the lock file once**, with network access:
+   ```
+   nix flake lock
+   ```
+   (requires Nix installed locally, or build the devcontainer once before
+   the CI gate will pass — see the honesty note in `flake.nix`.) Commit
+   the resulting `flake.lock`.
+2. Open this repository in a Dev Containers-compatible editor (VS Code:
+   "Reopen in Container"). This builds `.devcontainer/Dockerfile` — Debian
+   base + single-user Nix install — and starts the container with only
+   `NET_ADMIN`/`NET_RAW` added, no other elevated privileges, and no host
+   directories mounted beyond the project workspace itself.
+3. On container creation, `postCreateCommand` runs
    `sudo bash .devcontainer/init-firewall.sh`, which locks egress down to
    loopback, established connections, DNS to a configured resolver, and a
    fixed allowlist of domains.
-3. Verify the firewall from inside the container:
+4. Verify the firewall from inside the container:
    ```
    sudo iptables -L OUTPUT -v
    ```
    You should see policy `DROP` on `OUTPUT`, with `ACCEPT` rules only for
    loopback, established/related traffic, DNS to the configured resolver,
    and the `allowed-egress` ipset.
-4. Open a pull request against `main` to see `owasp-agentic-gate.yml` run
-   its six checks against your diff.
+5. Enter the pinned toolchain with `nix develop`, or install direnv and
+   just `cd` into the folder — `.envrc` auto-loads it.
+6. Open a pull request against `main` to see `owasp-agentic-gate.yml` run
+   its seven checks against your diff.
 
 ## What's in here
 
 ```
+flake.nix                 — pinned dev toolchain (Nix); see its header for
+                             how to generate flake.lock (not shipped here)
+.envrc                     — optional direnv auto-load of the flake devShell
+
 .devcontainer/
   devcontainer.json    — sandbox definition: NET_ADMIN/NET_RAW only, no
                           credential-directory bind mounts, runs the
                           firewall script via postCreateCommand
-  Dockerfile            — minimal Debian base, non-root `agent` user,
-                          sudo scoped to exactly iptables + ipset
+  Dockerfile            — Debian base + single-user Nix install, non-root
+                          `agent` user, sudo scoped to exactly the Nix-
+                          profile iptables + ipset binaries
   init-firewall.sh      — default-deny egress firewall (ASI05)
 
 agents/
@@ -46,7 +61,7 @@ aibom.json              — seed AI Bill of Materials for the example
                           agent (ASI04)
 
 .github/workflows/
-  owasp-agentic-gate.yml         — PR gate: 6 jobs, each mapped to the
+  owasp-agentic-gate.yml         — PR gate: 7 jobs, each mapped to the
                                     ASI risk it addresses
   nightly-sandbox-ttl-sweep.yml  — scheduled stub for sandbox TTL
                                     enforcement, with an honest gap noted
@@ -70,9 +85,35 @@ repository:
 | `secrets-scan` | ASI03 — Identity & Privilege Abuse | `policies/check-secrets-scan.sh` |
 | `sandbox-integrity` | ASI05 — Unexpected Code Execution | `policies/check-sandbox-integrity.sh` |
 | `aibom-updated` | ASI04 — Agentic Supply Chain | `policies/check-aibom-updated.sh` |
+| `flake-lock-pinned` | ASI04 — Agentic Supply Chain (toolchain pinning) | `policies/check-flake-lock.sh` |
 | `cost-tags` | spend accountability for IaC changes | `policies/check-cost-tags.sh` |
 | `dangerous-flags` | ASI02 / ASI09 — Tool Misuse & Trust Exploitation | `policies/check-dangerous-flags.sh` |
 | `agent-lifecycle` | ASI10 — Rogue Agents | `policies/check-agent-lifecycle.sh` |
+
+`flake.lock` isn't committed in this starter repo, on purpose — see the
+header comment in `flake.nix`. Until someone generates and commits the
+real one, `flake-lock-pinned` will fail on every PR; that's intentional
+honesty over a fabricated lock file, not a bug.
+
+## Wiring this into a real environment
+
+- **Secrets scan**: `check-secrets-scan.sh` installs and runs gitleaks —
+  review its ruleset against your actual key formats.
+- **AIBOM check**: currently just checks *presence* of an update, not
+  correctness. Swap in a real SCA/AI-inventory tool for CVE-level data.
+- **Credentials**: the devcontainer intentionally mounts nothing from the
+  host. Wire real auth via Workload Identity Federation (Entra ID, AWS IAM,
+  or GCP as the issuer) rather than adding an API key mount back in.
+- **Cost tags**: the tag check is a naive grep. Point it at your actual
+  Bicep/Terraform module conventions once those exist.
+- **TTL sweep**: only reaches cloud-hosted sandboxes. Local devcontainers on
+  a laptop need a local watchdog, or should be moved off laptops entirely
+  (Codespaces / cloud devpod) if TTL enforcement is a hard requirement.
+- **Nix single-user mode**: fine for an ephemeral, one-user-per-container
+  sandbox, which is what this is. If you later run Nix somewhere with
+  multiple concurrent users sharing a host, switch to the multi-user
+  install (nix-daemon) instead — single-user mode doesn't isolate build
+  users from each other the way the daemon does.
 
 ## What this does NOT cover
 

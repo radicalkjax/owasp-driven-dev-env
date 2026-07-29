@@ -12,10 +12,18 @@ set -euo pipefail
 # script is re-run. Long-lived containers should either re-run this on a
 # timer or replace the ipset approach with a transparent egress proxy
 # that allowlists by SNI/hostname instead of IP.
-
-IPTABLES="/usr/sbin/iptables"
-IPSET="/usr/sbin/ipset"
-DIG="/usr/bin/dig"
+#
+# WHY THESE PATHS ARE HARDCODED, NOT $HOME-RELATIVE:
+# This script runs via `sudo bash init-firewall.sh`. sudo resets $HOME to
+# the target user's home (root's, i.e. /root) by default — it does NOT
+# preserve the invoking user's $HOME. Referencing "$HOME/.nix-profile/..."
+# here would silently resolve to the wrong (nonexistent) path under sudo.
+# These must match the Nix profile paths set up in .devcontainer/Dockerfile
+# and the sudoers rule there — if you change the container username from
+# "agent", update all three places together.
+IPTABLES="/home/agent/.nix-profile/bin/iptables"
+IPSET="/home/agent/.nix-profile/bin/ipset"
+DIG="/home/agent/.nix-profile/bin/dig"
 
 # Configurable list of domains the sandbox is allowed to reach.
 ALLOWED_DOMAINS=(
